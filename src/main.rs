@@ -16,7 +16,7 @@ fn xexymix(){
 
     for k in 0..10000{
         let mut outputs = vec![];
-        for i in tqdm_rs::Tqdm::new(k*2..(k+1)*2) {
+        for i in tqdm_rs::Tqdm::new(k*50..(k+1)*50) {
             let new_page = page.clone() + (i+1).to_string().as_str();
             let response = reqwest::blocking::get(new_page).unwrap().text().unwrap();
             let document = scraper::Html::parse_document(&response);
@@ -44,7 +44,7 @@ fn xexymix(){
             }
         }
         std::fs::write(
-            "review2/review_".to_string()+(((k+1)*20)*2).to_string().as_str()+".json",
+            "reviews/review_".to_string()+(((k+1)*20)*50).to_string().as_str()+".json",
             serde_json::to_string_pretty(&outputs).unwrap(),
         ).unwrap();
         break;
