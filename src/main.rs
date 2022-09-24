@@ -10,12 +10,13 @@ fn xexymix(){
     let score_selector = scraper::Selector::parse(r#"div[class="review_list_v2__score_section"] > div > div > span[class="visually-hidden"]"#).unwrap();
     let product_selector = scraper::Selector::parse(r#"div[class^="review_list_v2__product_section"] > a > div > div[class="review_list_v2__info_container"] > div[class="review_list_v2__product_name"]"#).unwrap();
     let content_selector = scraper::Selector::parse(r#"div[class="review_list_v2__content_section"] > div > div > div > div > div"#).unwrap();
+    let image_selector = scraper::Selector::parse(r#"div[class="review_list_v2__image_section"] > div > ul > li > a > div > img"#).unwrap();
     let user_selector = scraper::Selector::parse(r#"div[class="review_list_v2__review_rcontent"]"#).unwrap();
     let profile_selector = scraper::Selector::parse(r#"div[class="review_list_v2__options_section"] > div > div"#).unwrap();
 
     for k in 0..10000{
         let mut outputs = vec![];
-        for i in tqdm_rs::Tqdm::new(k*50..(k+1)*50) {
+        for i in tqdm_rs::Tqdm::new(k*2..(k+1)*2) {
             let new_page = page.clone() + (i+1).to_string().as_str();
             let response = reqwest::blocking::get(new_page).unwrap().text().unwrap();
             let document = scraper::Html::parse_document(&response);
@@ -25,8 +26,9 @@ fn xexymix(){
 
                 let score = content.select(&score_selector).next().unwrap().inner_html();
                 let name = content.select(&product_selector).next().unwrap().inner_html();
-                let content = content.select(&content_selector).next().unwrap().inner_html().trim().replace("<br>", "\n");
-
+                let text = content.select(&content_selector).next().unwrap().inner_html().trim().replace("<br>", "\n");
+                let mut images = content.select(&image_selector);
+                let mut images= images.map(|x|x.value().attr("src").unwrap().replace("portrait_", "")).collect::<Vec<_>>();
                 let user = review.select(&user_selector).next().unwrap();
                 let info = user.select(&profile_selector).map(
                     |x| x.select(&scraper::Selector::parse(r#"span"#).unwrap()).map(|x| x.inner_html()).collect::<Vec<_>>()
@@ -34,16 +36,18 @@ fn xexymix(){
                 let output = serde_json::json!({
                     "product": name,
                     "rating": score,
-                    "review": content,
-                    "meta": info
+                    "review": text,
+                    "meta": info,
+                    "images": images
                 });
                 outputs.push(output);
             }
         }
         std::fs::write(
-            "reviews/review_".to_string()+(((k+1)*20)*50).to_string().as_str()+".json",
+            "review2/review_".to_string()+(((k+1)*20)*2).to_string().as_str()+".json",
             serde_json::to_string_pretty(&outputs).unwrap(),
         ).unwrap();
+        break;
     }
 
 }
