@@ -22,13 +22,13 @@ fn xexymix(){
             let document = scraper::Html::parse_document(&response);
             let reviews = document.select(&li_selector);
             for review in reviews {
-                let mut content = review.select(&review_selector).next().unwrap();
+                let content = review.select(&review_selector).next().unwrap();
 
                 let score = content.select(&score_selector).next().unwrap().inner_html();
                 let name = content.select(&product_selector).next().unwrap().inner_html();
                 let text = content.select(&content_selector).next().unwrap().inner_html().trim().replace("<br>", "\n");
-                let mut images = content.select(&image_selector);
-                let mut images= images.map(|x|x.value().attr("src").unwrap().replace("portrait_", "")).collect::<Vec<_>>();
+                let images = content.select(&image_selector);
+                let images= images.map(|x|x.value().attr("src").unwrap().replace("portrait_", "")).collect::<Vec<_>>();
                 let user = review.select(&user_selector).next().unwrap();
                 let info = user.select(&profile_selector).map(
                     |x| x.select(&scraper::Selector::parse(r#"span"#).unwrap()).map(|x| x.inner_html()).collect::<Vec<_>>()
